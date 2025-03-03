@@ -1,0 +1,59 @@
+#version: '3.8'
+
+services:
+  # Dịch vụ PHP
+  php:
+    build: ./docker/php
+    container_name: laravel_php
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./laravel-app:/var/www
+    depends_on:
+      - mysql
+
+  # Dịch vụ Nginx
+  nginx:
+    image: nginx:latest
+    container_name: laravel_nginx
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - ./laravel-app:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+
+  # Dịch vụ MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: laravel_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Dịch vụ phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel_phpmyadmin
+    restart: always
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
